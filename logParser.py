@@ -46,7 +46,7 @@ class Processer(object):
 
 		self.stateReg = re.compile(r'"completion_state":"Success"')
 		self.nameReg = re.compile(r'device_name\":\"'+ productName)
-		
+
 		self.stack = []
 		self.processerName = processerName
 		self.logger = logger
@@ -55,7 +55,7 @@ class Processer(object):
 
 	def processEventIfNecessary(self, line):
 		# check if it is a event related line
-		if self.eventReg.search(line):
+		if self.eventReg.search(line) and self.nameReg.search(line):
 			self.printStateIfNecessary(line)
 			self.checkError(line)
 			self.checkEventStart(line)
@@ -166,19 +166,20 @@ def processFile(processers, filePath, logger):
 
 def main():
 	if len(sys.argv) == 1:
-		name = ""
+		productName = ""
 	else:
-		name = sys.argv[1]
+		productName = sys.argv[1]
+
 	fs = os.listdir(".")
 	for f in fs:
 		if os.path.isdir(f):
 			logger = Logger(f+".txt")
 			
 			processers = []
-			processers.append(Gatt(logger, "gatt", "Gatt", name))
-			processers.append(Processer(logger, "pair", "PairBluetoothTask", False, name))
-			processers.append(Processer(logger, "firmware update", "FirmwareUpdate", False, name))
-			processers.append(Processer(logger, "sync", "Sync", False, name))
+			processers.append(Gatt(logger, "gatt", "Gatt", productName))
+			processers.append(Processer(logger, "pair", "PairBluetoothTask", False, productName))
+			processers.append(Processer(logger, "firmware update", "FirmwareUpdate", False, productName))
+			processers.append(Processer(logger, "sync", "Sync", False, productName))
 
 			ls = os.listdir(f)
 			ls.sort()
