@@ -55,7 +55,7 @@ class Processer(object):
 
 	def processEventIfNecessary(self, line):
 		# check if it is a event related line
-		if self.eventReg.search(line) and self.nameReg.search(line):
+		if self.eventReg.search(line):
 			self.printStateIfNecessary(line)
 			self.checkError(line)
 			self.checkEventStart(line)

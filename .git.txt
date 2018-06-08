@@ -1,0 +1,3 @@
+processer completed 0 pair for this directory, success: 0 fail: 0 unknown: 0
+processer completed 0 firmware update for this directory, success: 0 fail: 0 unknown: 0
+processer completed 0 sync for this directory, success: 0 fail: 0 unknown: 0
