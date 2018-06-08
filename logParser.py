@@ -41,13 +41,12 @@ class Processer(object):
 		self.eventReg = re.compile(r'stats \| '+ eventId +' -')
 		self.timeReg = re.compile(r'    \|.+?(?=\| stats )')
 		
-		# check if the error is null
 		self.noErroReg = re.compile(r'"error":null')
-
-		# print the error if exists
 		self.genErroReg = re.compile(r'"error":.+?(?=\})')
+
 		self.stateReg = re.compile(r'"completion_state":"Success"')
 		self.nameReg = re.compile(r'device_name\":\"'+ productName)
+		
 		self.stack = []
 		self.processerName = processerName
 		self.logger = logger
@@ -160,13 +159,10 @@ class Gatt(Processer):
 		self.logger.write("")	
 
 def processFile(processers, filePath, logger):
-	# errorLogReg = re.compile(r'ERROR   \| Bluetooth')
 	with open(filePath, "r") as file:
 	    for line in file:
 			for processer in processers:
 				processer.processEventIfNecessary(line)
-			# if errorLogReg.search(line):
-			# 	logger.write(line)
 
 def main():
 	if len(sys.argv) == 1:
