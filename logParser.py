@@ -186,7 +186,6 @@ def main():
 			printAllState = True
 
 	fs = os.listdir(".")
-	print(fs)
 	for f in fs:
 		if os.path.isdir(f):
 			logger = Logger(f+".txt")
