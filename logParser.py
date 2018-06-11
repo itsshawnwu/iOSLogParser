@@ -38,7 +38,9 @@ class Processer(object):
 		self.startReg = re.compile(r'stats \| '+ eventId +' - Start')
 		self.endReg = re.compile(r'stats \| '+ eventId +' - End')
 
+		self.eventStateReg = re.compile(r'\| stats \| ' + eventId + ' - .+?(?=\()')
 		self.eventReg = re.compile(r'stats \| '+ eventId +' -')
+
 		self.timeReg = re.compile(r'    \|.+?(?=\| stats )')
 		
 		self.noErroReg = re.compile(r'"error":null')
@@ -56,24 +58,33 @@ class Processer(object):
 	def processEventIfNecessary(self, line):
 		# check if it is a event related line
 		if self.eventReg.search(line) and self.nameReg.search(line):
-			self.printStateIfNecessary(line)
 			self.checkError(line)
 			self.checkEventStart(line)
+			self.printStateIfNecessary(line)
 			self.checkEventEnd(line)
 
 	def printStateIfNecessary(self, line):
 		if self.printAllState is True:
-			self.logger.write(line)
+			state = not self.hasError(line)
+			self.logger.write("")
+			self.logger.write(self.getTransitState(line) + "event ended at time " + self.getTime(line) + " success: " + str(state))
+			self.logger.write("")
+
+	def getTransitState(self, line):
+		if self.printAllState is True:
+			if self.eventStateReg.search(line):
+				return self.eventStateReg.findall(line)[0][10:]
+		return ""
 
 	def checkError(self, line):
-	    # check if there's an error statement
-		if self.genErroReg.search(line):
-			# if the error is not null, print it
-			if self.noErroReg.search(line) is None:
-				self.logger.write("found a " + self.processerName +" error: ")
-				self.logger.write(line)
-				self.addNewEventIfNecessary()
-				self.stack[-1].errorCount = self.stack[-1].errorCount + 1
+		if self.hasError(line):
+			self.logger.write("found a " + self.processerName +" error: ")
+			self.logger.write(line)
+			self.addNewEventIfNecessary()
+			self.stack[-1].errorCount = self.stack[-1].errorCount + 1
+
+	def hasError(self, line):
+		return self.genErroReg.search(line) and self.noErroReg.search(line) is None
 
 	def checkEventStart(self, line):
 		if self.startReg.search(line):
@@ -100,10 +111,9 @@ class Processer(object):
 			self.logger.write("")
 
 	def getTime(self, line):
-		time = ""
 		if self.timeReg.search(line):
-		    time = self.timeReg.findall(line)[0][6:-1]
-		return time
+		    return self.timeReg.findall(line)[0][6:-1]
+		return ""
 
 	def addNewEventIfNecessary(self):
 		if len(self.stack) == 0:
@@ -126,7 +136,7 @@ class Processer(object):
 class Gatt(Processer):
 	def __init__(self, logger, processerName, eventId, productName):
 		super(Gatt, self).__init__(logger, processerName, eventId, True, productName)
-		self.state = False
+		self.state = None
 		self.nameReg = re.compile(r'device_name\":\"'+ productName)
 		self.connectReg = re.compile(r'stats \| Gatt - Connect')
 		self.disconnectReg = re.compile(r'stats \| Gatt - Disconnect')
@@ -165,21 +175,27 @@ def processFile(processers, filePath, logger):
 				processer.processEventIfNecessary(line)
 
 def main():
-	if len(sys.argv) == 1:
-		productName = ""
-	else:
+	printAllState = False
+	productName = ""
+
+	if len(sys.argv) == 2:
 		productName = sys.argv[1]
+	elif len(sys.argv) == 3:
+		productName = sys.argv[1]
+		if sys.argv[2] == "1":
+			printAllState = True
 
 	fs = os.listdir(".")
+	print(fs)
 	for f in fs:
 		if os.path.isdir(f):
 			logger = Logger(f+".txt")
 			
 			processers = []
 			processers.append(Gatt(logger, "gatt", "Gatt", productName))
-			processers.append(Processer(logger, "pair", "PairBluetoothTask", False, productName))
-			processers.append(Processer(logger, "firmware update", "FirmwareUpdate", False, productName))
-			processers.append(Processer(logger, "sync", "Sync", False, productName))
+			processers.append(Processer(logger, "pair", "PairBluetoothTask", printAllState, productName))
+			processers.append(Processer(logger, "firmware update", "FirmwareUpdate", printAllState, productName))
+			processers.append(Processer(logger, "sync", "Sync", printAllState, productName))
 
 			ls = os.listdir(f)
 			ls.sort()
