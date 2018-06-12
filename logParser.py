@@ -41,7 +41,7 @@ class Processer(object):
 		self.eventStateReg = re.compile(r'\| stats \| ' + eventId + ' - .+?(?=\()')
 		self.eventReg = re.compile(r'stats \| '+ eventId +' -')
 
-		self.timeReg = re.compile(r'\| 2.+?\/.+?\/.+?\|')
+		self.timeReg = re.compile(r'\| \d{4}\/.*?\|')
 		
 		self.noErroReg = re.compile(r'"error":null')
 		self.genErroReg = re.compile(r'"error":.+?(?=\})')
@@ -79,7 +79,11 @@ class Processer(object):
 	def checkError(self, line):
 		if self.hasError(line):
 			self.logger.write("found a " + self.processerName +" error: ")
-			self.logger.write(line)
+			# self.logger.write(line)
+			lineReg = re.compile('\".*?\:\".*?\"')
+			for l in lineReg.findall(line):
+				self.logger.write(l)
+			self.logger.write("")
 			self.addNewEventIfNecessary()
 			self.stack[-1].errorCount = self.stack[-1].errorCount + 1
 
