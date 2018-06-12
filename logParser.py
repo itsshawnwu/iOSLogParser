@@ -41,7 +41,7 @@ class Processer(object):
 		self.eventStateReg = re.compile(r'\| stats \| ' + eventId + ' - .+?(?=\()')
 		self.eventReg = re.compile(r'stats \| '+ eventId +' -')
 
-		self.timeReg = re.compile(r'    \|.+?(?=\| stats )')
+		self.timeReg = re.compile(r'\| 2.+?\/.+?\/.+?\|')
 		
 		self.noErroReg = re.compile(r'"error":null')
 		self.genErroReg = re.compile(r'"error":.+?(?=\})')
@@ -112,7 +112,7 @@ class Processer(object):
 
 	def getTime(self, line):
 		if self.timeReg.search(line):
-		    return self.timeReg.findall(line)[0][6:-1]
+		    return self.timeReg.findall(line)[0][2:-2]
 		return ""
 
 	def addNewEventIfNecessary(self):
