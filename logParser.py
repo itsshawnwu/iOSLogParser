@@ -38,7 +38,7 @@ class Processer(object):
 		self.startReg = re.compile(r'stats \| '+ eventId +' - Start')
 		self.endReg = re.compile(r'stats \| '+ eventId +' - End')
 
-		self.eventStateReg = re.compile(r'\| stats \| ' + eventId + ' - .+?(?=\()')
+		self.eventStateReg = re.compile(r'\| '+ eventId +' -\s.+?\(' + '|\| '+ eventId +' -\s.+?\:')
 		self.eventReg = re.compile(r'stats \| '+ eventId +' -')
 
 		self.timeReg = re.compile(r'\| \d{4}\/.*?\|')
@@ -73,13 +73,12 @@ class Processer(object):
 	def getTransitState(self, line):
 		if self.printAllState is True:
 			if self.eventStateReg.search(line):
-				return self.eventStateReg.findall(line)[0][10:]
+				return self.eventStateReg.findall(line)[0][2:-1]
 		return ""
 
 	def checkError(self, line):
 		if self.hasError(line):
 			self.logger.write("found a " + self.processerName +" error: ")
-			# self.logger.write(line)
 			lineReg = re.compile('\".*?\:\".*?\"')
 			for l in lineReg.findall(line):
 				self.logger.write(l)
@@ -183,7 +182,10 @@ def main():
 	productName = ""
 
 	if len(sys.argv) == 2:
-		productName = sys.argv[1]
+		if sys.argv[1] == "1":
+			printAllState = True
+		else:
+			productName = sys.argv[1]
 	elif len(sys.argv) == 3:
 		productName = sys.argv[1]
 		if sys.argv[2] == "1":
